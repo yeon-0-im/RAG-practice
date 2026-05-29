@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ko" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>중대재해처벌법 챗봇 V1.0</title>
+
+  <!-- Nanum Gothic Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Marked.js -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { nanum: ['"Nanum Gothic"', 'sans-serif'] },
+          colors: {
+            primary: '#6C63FF',
+            primaryLight: '#EEF0FF',
+            accent: '#4F46E5',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    * { font-family: 'Nanum Gothic', sans-serif; box-sizing: border-box; }
+
+    /* ═══════════════════════════════════════════
+       LIGHT MODE  (기본)
+    ═══════════════════════════════════════════ */
+    html.light body {
+      /* 채팅창 외부: 파란색 계열 그라디언트 */
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 35%, #2563eb 60%, #3b82f6 85%, #60a5fa 100%);
+      min-height: 100vh;
+    }
+
+    /* 헤더 */
+    html.light #appHeader       { background: #ffffff; border-bottom: 1px solid #E5E7EB; }
+    html.light #appHeader *     { color-scheme: light; }
+    html.light .header-logo-txt { color: #1E1B4B; }
+    html.light .breadcrumb-txt  { color: #9CA3AF; }
+    html.light .breadcrumb-last { color: #4F46E5; font-weight: 700; }
+    html.light .header-cfg      { color: #6B7280; font-size: 13px; }
+    html.light .header-icon-btn { color: #6C63FF; }
+    html.light .header-icon-btn:hover { background: #EEF0FF; }
+    html.light .export-btn      { background: #1E1B4B; color: #fff; }
+    html.light .export-btn:hover{ background: #4F46E5; }
+
+    /* 사이드바 */
+    html.light #sidebar         { background: #F8F8FC; border-right: 1px solid #E5E7EB; }
+    html.light .nav-item:hover  { background: #EEEEFF; }
+    html.light .nav-item.active { background: #EEF0FF; }
+    html.light .nav-txt         { color: #6B7280; }
+    html.light .nav-item.active .nav-txt { color: #6C63FF; font-weight: 700; }
+    html.light .section-label   { color: #9CA3AF; }
+    html.light .tree-item       { color: #6B7280; }
+    html.light .tree-item:hover { background: #EEEEFF; color: #4F46E5; }
+    html.light .tree-item.active{ background: #EEF0FF; color: #4F46E5; font-weight: 700; }
+    html.light .tree-bold       { color: #1E1B4B; }
+    html.light .premium-card    { background: linear-gradient(135deg,#EEF0FF,#F8F8FF); border: 1px solid #DDD8FF; }
+    html.light .premium-title   { color: #1E1B4B; }
+    html.light .premium-sub     { color: #6B7280; }
+    html.light .premium-badge   { background: #EEF0FF; color: #6C63FF; }
+    html.light .premium-days    { color: #6B7280; }
+    html.light .progress-bar    { background: #E5E7EB; }
+    html.light .sidebar-menu-btn{ color: #6B7280; }
+    html.light .sidebar-menu-btn:hover { color: #6C63FF; }
+
+    /* 채팅 영역 */
+    html.light #chatMain        { background: #F5F6FF; }
+    html.light .bubble-bot      { background: #ffffff; color: #1E1B4B; border: 1px solid #E5E7EB; box-shadow: 0 2px 8px rgba(108,99,255,.06); }
+    html.light .bubble-bot h3   { color: #1E1B4B; }
+    html.light .bubble-bot strong{ color: #4F46E5; }
+    html.light .bubble-bot table { border-collapse: collapse; width: 100%; }
+    html.light .bubble-bot th   { background: #EEF0FF; color: #4F46E5; }
+    html.light .bubble-bot td,
+    html.light .bubble-bot th   { border: 1px solid #E5E7EB; padding: 5px 10px; font-size: 13px; }
+    html.light .msg-time        { color: #9CA3AF; }
+    html.light .msg-action-btn  { color: #9CA3AF; }
+    html.light .msg-action-btn:hover { color: #6C63FF; }
+    html.light .chip            { background: #EEF0FF; color: #4F46E5; border: 1px solid #C7D2FE; }
+    html.light .chip:hover      { background: #DDD8FF; }
+
+    /* 입력창 */
+    html.light #inputArea       { background: #ffffff; border-top: 1px solid #E5E7EB; }
+    html.light #inputBox        { background: #ffffff; border: 1px solid #E5E7EB; }
+    html.light #inputBox:focus-within { border-color: #6C63FF; box-shadow: 0 0 0 2px #EEF0FF; }
+    html.light #userInput       { color: #1E1B4B; }
+    html.light #userInput::placeholder { color: #9CA3AF; }
+    html.light .input-icon-btn  { color: #9CA3AF; }
+    html.light .input-icon-btn:hover { color: #6C63FF; background: #EEF0FF; }
+    html.light .char-count      { color: #9CA3AF; }
+    html.light .tools-btn       { color: #9CA3AF; }
+    html.light .tools-btn:hover { color: #6C63FF; }
+    html.light .banner-txt      { color: #9CA3AF; }
+    html.light .banner-txt strong { color: #6C63FF; }
+
+    /* 모달 */
+    html.light .modal-bg        { background: rgba(30,27,75,.45); }
+    html.light .modal-box       { background: #ffffff; }
+    html.light .modal-header    { border-bottom: 1px solid #E5E7EB; }
+    html.light .modal-title     { color: #1E1B4B; }
+    html.light .modal-close     { color: #9CA3AF; }
+    html.light .modal-close:hover { color: #1E1B4B; }
+    html.light .chart-wrap      { background: #ffffff; border: 1px solid #E5E7EB; }
+    html.light .chart-title     { color: #1E1B4B; }
+    html.light .chk-item        { background: #EEF0FF; }
+    html.light .chk-label       { color: #1E1B4B; }
+
+    /* ═══════════════════════════════════════════
+       DARK MODE
+    ═══════════════════════════════════════════ */
+    html.dark body {
+      background: linear-gradient(135deg, #0c1a3a 0%, #0f2460 35%, #1a3a7a 60%, #1e4d96 85%, #1d6bbb 100%);
+      min-height: 100vh;
+    }
+
+    /* 헤더 */
+    html.dark #appHeader        { background: #1a1f35; border-bottom: 1px solid #2d3561; }
+    html.dark .header-logo-txt  { color: #e2e8f0; }
+    html.dark .breadcrumb-txt   { color: #64748b; }
+    html.dark .breadcrumb-last  { color: #818cf8; font-weight: 700; }
+    html.dark .header-cfg       { color: #64748b; font-size: 13px; }
+    html.dark .header-icon-btn  { color: #818cf8; }
+    html.dark .header-icon-btn:hover { background: #2d3561; }
+    html.dark .export-btn       { background: #2d3561; color: #e2e8f0; }
+    html.dark .export-btn:hover { background: #4F46E5; color: #fff; }
+
+    /* 사이드바 */
+    html.dark #sidebar          { background: #151929; border-right: 1px solid #2d3561; }
+    html.dark .nav-item:hover   { background: #1e2a4a; }
+    html.dark .nav-item.active  { background: #1e2a4a; }
+    html.dark .nav-txt          { color: #94a3b8; }
+    html.dark .nav-item.active .nav-txt { color: #818cf8; font-weight: 700; }
+    html.dark .section-label    { color: #475569; }
+    html.dark .tree-item        { color: #64748b; }
+    html.dark .tree-item:hover  { background: #1e2a4a; color: #818cf8; }
+    html.dark .tree-item.active { background: #1e2a4a; color: #818cf8; font-weight: 700; }
+    html.dark .tree-bold        { color: #e2e8f0; }
+    html.dark .premium-card     { background: linear-gradient(135deg,#1e2a4a,#1a2040); border: 1px solid #2d3561; }
+    html.dark .premium-title    { color: #e2e8f0; }
+    html.dark .premium-sub      { color: #64748b; }
+    html.dark .premium-badge    { background: #1e2a4a; color: #818cf8; }
+    html.dark .premium-days     { color: #64748b; }
+    html.dark .progress-bar     { background: #2d3561; }
+    html.dark .sidebar-menu-btn { color: #64748b; }
+    html.dark .sidebar-menu-btn:hover { color: #818cf8; }
+
+    /* 채팅 영역 */
+    html.dark #chatMain         { background: #111827; }
+    html.dark .bubble-bot       { background: #1a1f35; color: #e2e8f0; border: 1px solid #2d3561; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+    html.dark .bubble-bot h3    { color: #e2e8f0; }
+    html.dark .bubble-bot strong{ color: #818cf8; }
+    html.dark .bubble-bot table { border-collapse: collapse; width: 100%; }
+    html.dark .bubble-bot th    { background: #1e2a4a; color: #818cf8; }
+    html.dark .bubble-bot td,
+    html.dark .bubble-bot th    { border: 1px solid #2d3561; padding: 5px 10px; font-size: 13px; }
+    html.dark .msg-time         { color: #475569; }
+    html.dark .msg-action-btn   { color: #475569; }
+    html.dark .msg-action-btn:hover { color: #818cf8; }
+    html.dark .chip             { background: #1e2a4a; color: #818cf8; border: 1px solid #2d3561; }
+    html.dark .chip:hover       { background: #2d3561; }
+
+    /* 입력창 */
+    html.dark #inputArea        { background: #1a1f35; border-top: 1px solid #2d3561; }
+    html.dark #inputBox         { background: #111827; border: 1px solid #2d3561; }
+    html.dark #inputBox:focus-within { border-color: #818cf8; box-shadow: 0 0 0 2px rgba(129,140,248,.15); }
+    html.dark #userInput        { color: #e2e8f0; }
+    html.dark #userInput::placeholder { color: #475569; }
+    html.dark .input-icon-btn   { color: #475569; }
+    html.dark .input-icon-btn:hover { color: #818cf8; background: #1e2a4a; }
+    html.dark .char-count       { color: #475569; }
+    html.dark .tools-btn        { color: #475569; }
+    html.dark .tools-btn:hover  { color: #818cf8; }
+    html.dark .banner-txt       { color: #475569; }
+    html.dark .banner-txt strong { color: #818cf8; }
+
+    /* 모달 */
+    html.dark .modal-bg         { background: rgba(0,0,0,.65); }
+    html.dark .modal-box        { background: #1a1f35; }
+    html.dark .modal-header     { border-bottom: 1px solid #2d3561; }
+    html.dark .modal-title      { color: #e2e8f0; }
+    html.dark .modal-close      { color: #475569; }
+    html.dark .modal-close:hover { color: #e2e8f0; }
+    html.dark .chart-wrap       { background: #111827; border: 1px solid #2d3561; }
+    html.dark .chart-title      { color: #e2e8f0; }
+    html.dark .chk-item         { background: #1e2a4a; }
+    html.dark .chk-label        { color: #e2e8f0; }
+
+    /* ═══════════════════════════════════════════
+       SHARED (mode-independent)
+    ═══════════════════════════════════════════ */
+
+    /* Outer wrapper — glass card feel */
+    #appShell {
+      box-shadow: 0 25px 60px rgba(0,0,0,.35);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #6C63FF55; border-radius: 10px; }
+
+    /* Sidebar */
+    #sidebar { transition: transform .3s ease; }
+    #sidebar.collapsed { width: 0 !important; overflow: hidden; }
+
+    @media (max-width: 768px) {
+      #sidebar { position: fixed !important; left:0; top:0; bottom:0; z-index:50; transform:translateX(-100%); width:260px !important; }
+      #sidebar.open { transform:translateX(0) !important; }
+    }
+
+    /* Mobile overlay */
+    #sidebarOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:40; }
+    #sidebarOverlay.show { display:block; }
+
+    /* Nav item */
+    .nav-item { transition: background .15s; border-radius: 8px; cursor: pointer; }
+
+    /* Tree item */
+    .tree-item { font-size: 13px; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+
+    /* Chat bubble */
+    .bubble-user {
+      background: linear-gradient(135deg, #6C63FF 0%, #4F46E5 100%);
+      color: #fff;
+      border-radius: 18px 18px 4px 18px;
+    }
+    .bubble-bot { border-radius: 18px 18px 18px 4px; }
+    .bubble-bot ul { list-style: disc; padding-left: 20px; }
+    .bubble-bot li { margin-bottom: 4px; }
+    .bubble-bot a  { color: #6C63FF; text-decoration: underline; }
+
+    /* Typing dots */
+    .dot { width:8px; height:8px; background:#6C63FF; border-radius:50%; animation:bounce 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay:.2s; }
+    .dot:nth-child(3) { animation-delay:.4s; }
+    @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-8px)} }
+
+    /* Buttons */
+    .btn-new { background: linear-gradient(135deg,#6C63FF,#4F46E5); transition:opacity .2s,transform .1s; }
+    .btn-new:hover { opacity:.9; transform:translateY(-1px); }
+    #sendBtn { background: linear-gradient(135deg,#6C63FF,#4F46E5); transition:opacity .2s,transform .1s; }
+    #sendBtn:hover:not(:disabled) { opacity:.85; transform:scale(1.05); }
+    #sendBtn:disabled { opacity:.35; }
+
+    /* Progress fill */
+    .progress-fill { height:100%; border-radius:999px; background: linear-gradient(90deg,#6C63FF,#4F46E5); }
+
+    /* Chip */
+    .chip { border-radius:999px; font-size:13px; padding:6px 14px; cursor:pointer; transition:background .15s,transform .1s; white-space:nowrap; }
+    .chip:hover { transform:translateY(-1px); }
+
+    /* Message animation */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .msg-enter { animation:fadeUp .3s ease forwards; }
+
+    /* Theme toggle button */
+    #themeBtn { transition: transform .4s ease; }
+    #themeBtn:hover { transform: rotate(20deg); }
+
+    /* Dark mode toggle animation */
+    .sun-icon, .moon-icon { transition: opacity .3s, transform .3s; }
+    html.dark .sun-icon  { opacity:1; transform:rotate(0deg); }
+    html.dark .moon-icon { opacity:0; transform:rotate(-90deg); }
+    html.light .sun-icon { opacity:0; transform:rotate(90deg); }
+    html.light .moon-icon{ opacity:1; transform:rotate(0deg); }
+  </style>
+</head>
+
+<!-- Outer body = blue gradient background -->
+<body class="h-screen flex items-stretch justify-stretch overflow-hidden p-0 md:p-4">
+
+  <!-- ═══════════════ APP SHELL ═══════════════ -->
+  <div id="appShell" class="flex flex-col w-full h-full md:h-[calc(100vh-2rem)] md:rounded-2xl overflow-hidden">
+
+    <!-- ═══════════════ HEADER ═══════════════ -->
+    <header id="appHeader" class="flex items-center px-4 h-14 gap-3 z-30 flex-shrink-0 transition-colors duration-300">
+
+      <!-- Hamburger (mobile) -->
+      <button id="menuBtn" class="md:hidden p-1.5 rounded-lg header-icon-btn">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+
+      <!-- Logo -->
+      <div class="flex items-center gap-2 mr-2">
+        <div class="w-7 h-7 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+          </svg>
+        </div>
+        <span class="font-extrabold text-base hidden sm:block header-logo-txt transition-colors duration-300">중대재해챗봇</span>
+      </div>
+
+      <!-- Breadcrumb -->
+      <div class="hidden md:flex items-center gap-1.5 flex-1 text-sm">
+        <span class="breadcrumb-txt transition-colors duration-300">챗봇 앱</span>
+        <span class="breadcrumb-txt">/</span>
+        <span class="breadcrumb-txt transition-colors duration-300">법령 패널</span>
+        <span class="breadcrumb-txt">/</span>
+        <span class="breadcrumb-last transition-colors duration-300">중대재해처벌법 v1.0 ▾</span>
+      </div>
+
+      <!-- Right actions -->
+      <div class="ml-auto flex items-center gap-1.5">
+        <span class="hidden sm:block header-cfg transition-colors duration-300">Configuration</span>
+
+        <!-- Settings -->
+        <button onclick="openSettings()" class="p-1.5 rounded-lg header-icon-btn transition-colors duration-300" title="설정">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="themeBtn" onclick="toggleTheme()" class="p-1.5 rounded-lg header-icon-btn transition-colors duration-300 relative w-8 h-8 flex items-center justify-center" title="다크/라이트 모드 전환">
+          <!-- Sun (dark mode에서 표시) -->
+          <svg class="sun-icon w-5 h-5 absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+          </svg>
+          <!-- Moon (light mode에서 표시) -->
+          <svg class="moon-icon w-5 h-5 absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+        </button>
+
+        <!-- Export -->
+        <button onclick="exportChat()" class="export-btn flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-lg transition-colors duration-300">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <span class="hidden sm:inline">내보내기</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════════ BODY ROW ═══════════════ -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+      <!-- Mobile overlay -->
+      <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+      <!-- ═══════════ SIDEBAR ═══════════ -->
+      <aside id="sidebar" class="w-64 flex flex-col flex-shrink-0 overflow-y-auto transition-colors duration-300">
+
+        <!-- New Chat -->
+        <div class="p-3">
+          <button onclick="newChat()" class="btn-new w-full text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+            </svg>
+            새 대화
+          </button>
+        </div>
+
+        <!-- Features -->
+        <div class="px-3 pb-2">
+          <p class="text-xs font-bold uppercase tracking-widest mb-2 px-1 section-label transition-colors duration-300">기능</p>
+
+          <div class="nav-item active flex items-center gap-2.5 px-3 py-2 text-sm" onclick="setNav(this)">
+            <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            <span class="nav-txt transition-colors duration-300">AI 법령 상담</span>
+          </div>
+
+          <div class="nav-item flex items-center gap-2.5 px-3 py-2 text-sm" onclick="setNav(this); openSafety()">
+            <svg class="w-4 h-4 flex-shrink-0 text-primary opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="nav-txt transition-colors duration-300">안전 통계 차트</span>
+          </div>
+
+          <div class="nav-item flex items-center gap-2.5 px-3 py-2 text-sm" onclick="setNav(this); showChecklist()">
+            <svg class="w-4 h-4 flex-shrink-0 text-primary opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <span class="nav-txt transition-colors duration-300">의무사항 체크리스트</span>
+          </div>
+
+          <div class="nav-item flex items-center gap-2.5 px-3 py-2 text-sm" onclick="setNav(this)">
+            <svg class="w-4 h-4 flex-shrink-0 text-primary opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="nav-txt transition-colors duration-300">대화 기록</span>
+          </div>
+
+          <div class="nav-item flex items-center gap-2.5 px-3 py-2 text-sm" onclick="setNav(this)">
+            <svg class="w-4 h-4 flex-shrink-0 text-primary opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
+            <span class="nav-txt transition-colors duration-300">법령 라이브러리</span>
+          </div>
+        </div>
+
+        <!-- Project Tree -->
+        <div class="px-3 pb-2 mt-2">
+          <div class="flex items-center justify-between mb-2 px-1">
+            <p class="text-xs font-bold uppercase tracking-widest section-label transition-colors duration-300">프로젝트</p>
+            <button class="sidebar-menu-btn transition-colors duration-300">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            </button>
+          </div>
+
+          <div class="tree-item flex items-center gap-2 transition-colors duration-300">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+            UI 컴포넌트
+          </div>
+
+          <div class="mt-1">
+            <div class="tree-item tree-bold flex items-center gap-2 font-bold transition-colors duration-300">
+              <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
+              중대재해챗봇 앱
+            </div>
+            <div class="ml-5 mt-0.5">
+              <div class="tree-item flex items-center gap-2 transition-colors duration-300">
+                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                인터페이스 로직
+              </div>
+              <div class="tree-item active flex items-center gap-2 transition-colors duration-300">
+                <svg class="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                법령 패널
+              </div>
+            </div>
+          </div>
+
+          <div class="tree-item flex items-center gap-2 mt-1 transition-colors duration-300">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-2"/></svg>
+            AI 플레이그라운드
+          </div>
+        </div>
+
+        <!-- Spacer -->
+        <div class="flex-1"></div>
+
+        <!-- Premium Card -->
+        <div class="p-3">
+          <div class="premium-card rounded-xl p-3 transition-colors duration-300">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-7 h-7 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              </div>
+              <span class="text-sm font-extrabold premium-title transition-colors duration-300">프리미엄 업그레이드</span>
+            </div>
+            <p class="text-xs mb-2 premium-sub transition-colors duration-300">더 빠른 응답 속도와 고급 법령 분석 기능을 한 번에</p>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full premium-badge transition-colors duration-300">무료 플랜</span>
+              <span class="text-xs premium-days transition-colors duration-300">30일 중 17일 사용</span>
+            </div>
+            <div class="progress-bar h-1.5 rounded-full overflow-hidden mb-3 transition-colors duration-300">
+              <div class="progress-fill" style="width:57%"></div>
+            </div>
+            <button onclick="goPremium()" class="btn-new w-full text-white text-sm font-bold py-2 rounded-xl">프리미엄 시작</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ═══════════ CHAT MAIN ═══════════ -->
+      <main id="chatMain" class="flex-1 flex flex-col overflow-hidden transition-colors duration-300">
+
+        <!-- Messages -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+
+          <!-- Welcome -->
+          <div class="msg-enter flex gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+            </div>
+            <div class="flex flex-col gap-1 max-w-2xl w-full">
+              <span class="text-xs font-bold text-primary">중대재해 AI 어시스턴트</span>
+              <div class="bubble-bot px-4 py-4 text-sm leading-relaxed">
+                <p class="font-extrabold mb-2">안녕하세요! 중대재해처벌법 전문 AI 챗봇입니다 👋</p>
+                <p class="mb-3 opacity-80">중대재해처벌법 관련 궁금한 사항을 질문해 주세요. 법령 해석, 의무사항, 처벌 규정, 안전보건 관리체계 구축 등 다양한 주제를 안내해 드립니다.</p>
+                <p class="text-xs opacity-60">⚠️ 본 챗봇의 답변은 참고용이며, 법적 효력을 갖지 않습니다. 구체적인 법률 상담은 전문가에게 문의하세요.</p>
+              </div>
+              <div class="flex flex-wrap gap-2 mt-1">
+                <button class="chip" onclick="sendChip(this)">중대재해처벌법이란?</button>
+                <button class="chip" onclick="sendChip(this)">적용 대상 기업은?</button>
+                <button class="chip" onclick="sendChip(this)">경영책임자 의무사항</button>
+                <button class="chip" onclick="sendChip(this)">처벌 규정 안내</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Input Area -->
+        <div id="inputArea" class="px-4 py-3 flex-shrink-0 transition-colors duration-300">
+          <div class="text-center text-xs mb-2 hidden md:block banner-txt transition-colors duration-300">
+            최고의 AI 법령 어시스턴트를 경험하세요 · 이미 <strong>3만+</strong> 기업이 활용 중
+          </div>
+
+          <div id="inputBox" class="flex items-end gap-2 rounded-2xl px-4 py-2 transition-all duration-200">
+            <span class="text-primary mb-1 flex-shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+            </span>
+            <textarea
+              id="userInput" rows="1"
+              placeholder="중대재해처벌법에 대해 질문하세요..."
+              class="flex-1 resize-none outline-none text-sm bg-transparent py-1 max-h-32 transition-colors duration-300"
+              oninput="autoResize(this)" onkeydown="handleKey(event)"
+            ></textarea>
+            <div class="flex items-center gap-1 mb-0.5 flex-shrink-0">
+              <button onclick="attachFile()" title="파일 첨부" class="p-1.5 rounded-lg input-icon-btn transition-colors duration-300">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+              </button>
+              <button onclick="copyPrompt()" title="복사" class="p-1.5 rounded-lg input-icon-btn transition-colors duration-300">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              </button>
+              <button id="sendBtn" onclick="sendMessage()" class="w-9 h-9 rounded-xl flex items-center justify-center text-white">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between mt-2 px-1">
+            <button onclick="toggleTools()" class="tools-btn text-xs flex items-center gap-1 transition-colors duration-300">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+              도구 ▾
+            </button>
+            <span class="text-xs char-count transition-colors duration-300" id="charCount">0 / 2000</span>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div><!-- /appShell -->
+
+  <!-- ═══════════════ CHART MODAL ═══════════════ -->
+  <div id="chartModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-bg transition-colors duration-300">
+    <div class="modal-box rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transition-colors duration-300">
+      <div class="flex items-center justify-between p-5 modal-header transition-colors duration-300">
+        <h2 class="font-extrabold text-lg modal-title transition-colors duration-300">📊 산업재해 안전 통계</h2>
+        <button onclick="closeChart()" class="modal-close transition-colors duration-300">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-5">
+        <div class="chart-wrap rounded-xl p-4 transition-colors duration-300">
+          <p class="text-sm font-bold mb-3 chart-title transition-colors duration-300">연도별 산업재해 사망자 수 (명)</p>
+          <canvas id="deathChart" height="160"></canvas>
+        </div>
+        <div class="chart-wrap rounded-xl p-4 transition-colors duration-300">
+          <p class="text-sm font-bold mb-3 chart-title transition-colors duration-300">업종별 중대재해 발생 비율 (%)</p>
+          <canvas id="sectorChart" height="160"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CHECKLIST MODAL ═══════════════ -->
+  <div id="checklistModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-bg transition-colors duration-300">
+    <div class="modal-box rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto transition-colors duration-300">
+      <div class="flex items-center justify-between p-5 modal-header transition-colors duration-300">
+        <h2 class="font-extrabold text-lg modal-title transition-colors duration-300">✅ 사업주 의무사항 체크리스트</h2>
+        <button onclick="closeChecklist()" class="modal-close transition-colors duration-300">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-3" id="checklistBody"></div>
+    </div>
+  </div>
+
+  <script>
+  // ════════════════════════════════════════════
+  //  THEME
+  // ════════════════════════════════════════════
+  let isDark = false;
+
+  function toggleTheme() {
+    isDark = !isDark;
+    const html = document.documentElement;
+    if (isDark) {
+      html.classList.remove('light');
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+      html.classList.add('light');
+    }
+    // Notify
+    Swal.fire({
+      icon: 'info',
+      title: isDark ? '🌙 다크 모드 활성화' : '☀️ 라이트 모드 활성화',
+      timer: 1200, showConfirmButton: false, toast: true, position: 'top-end'
+    });
+  }
+
+  // ════════════════════════════════════════════
+  //  KNOWLEDGE BASE
+  // ════════════════════════════════════════════
+  const KB = {
+    "중대재해처벌법이란": `### 중대재해처벌법이란?
+
+**중대재해처벌법**은 사업 또는 사업장에서 발생하는 중대산업재해와 공중이용시설 등에서 발생하는 **중대시민재해**를 예방하고, 이를 방지하기 위한 경영책임자 등의 안전·보건 조치 의무를 규정한 법률입니다.
+
+**주요 특징**
+- 시행일: 2022년 1월 27일 (50인 이상 사업장)
+- 2024년 1월 27일부터 5인 이상 50인 미만 사업장에도 적용
+- **경영책임자**에게 형사 처벌 가능
+
+**중대산업재해 정의**
+- 사망자 1명 이상 발생
+- 동일 사고로 6개월 이상 치료 필요 부상자 2명 이상
+- 동일 질병으로 1년 이내 3명 이상 질병자 발생`,
+
+    "적용 대상": `### 적용 대상 기업
+
+| 구분 | 적용 시기 | 비고 |
+|------|-----------|------|
+| 50인 이상 사업장 | 2022.01.27 | 즉시 적용 |
+| 5~49인 사업장 | 2024.01.27 | 2년 유예 후 적용 |
+| 5인 미만 사업장 | 적용 제외 | - |
+
+**적용 제외 대상**
+- 상시근로자 5인 미만 사업장
+- 다만, 도급·용역·위탁 관계에서 수급인 근로자 포함 시 산정
+
+**건설업 적용**
+- 공사금액 50억원 이상인 건설현장에 적용됩니다.`,
+
+    "경영책임자 의무사항": `### 경영책임자 의무사항 (제4조)
+
+경영책임자는 아래 **안전·보건 확보 의무**를 이행해야 합니다.
+
+**① 안전보건관리체계 구축·이행**
+- 안전·보건 목표 및 경영방침 설정
+- 전담 조직 설치 (상시근로자 500인 이상)
+
+**② 재해 재발방지 대책 수립·이행**
+- 중대산업재해 발생 시 즉시 원인 조사
+- 재발방지 대책 마련 및 이행 확인
+
+**③ 중앙행정기관 시정명령 이행**
+- 고용노동부, 국토교통부 등의 시정명령 준수
+
+**④ 안전·보건 관련 예산 편성·집행**
+- 유해·위험 요인 개선에 필요한 예산 배정`,
+
+    "처벌 규정": `### 처벌 규정
+
+**경영책임자 처벌 (제6조~제7조)**
+
+| 위반 유형 | 처벌 수준 |
+|-----------|-----------|
+| 중대산업재해 사망 | **1년 이상 징역** 또는 10억원 이하 벌금 |
+| 중대산업재해 부상/질병 | 7년 이하 징역 또는 1억원 이하 벌금 |
+| 중대시민재해 사망 | 1년 이상 징역 또는 10억원 이하 벌금 |
+
+**법인 처벌 (양벌규정)**
+- 사망: **50억원 이하** 벌금
+- 부상/질병: **10억원 이하** 벌금
+
+⚠️ **5년 이내 재범 시 1/2까지 가중** 처벌 가능합니다.`,
+  };
+
+  function findAnswer(q) {
+    const l = q.toLowerCase();
+    if (l.includes("처벌법이란") || l.includes("법이란") || l.includes("개요") || l.includes("이란")) return KB["중대재해처벌법이란"];
+    if (l.includes("적용") || l.includes("대상") || l.includes("기업") || l.includes("규모")) return KB["적용 대상"];
+    if (l.includes("경영") || l.includes("의무") || l.includes("체계") || l.includes("책임자")) return KB["경영책임자 의무사항"];
+    if (l.includes("처벌") || l.includes("벌금") || l.includes("징역") || l.includes("형사")) return KB["처벌 규정"];
+    return null;
+  }
+
+  // ════════════════════════════════════════════
+  //  CHAT
+  // ════════════════════════════════════════════
+  let isLoading = false;
+
+  function autoResize(ta) {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 128) + 'px';
+    document.getElementById('charCount').textContent = ta.value.length + ' / 2000';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function scrollBottom() {
+    const c = document.getElementById('chatMessages');
+    setTimeout(() => c.scrollTo({ top: c.scrollHeight, behavior: 'smooth' }), 50);
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function botAvatar() {
+    return `<div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center">
+      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+    </div>`;
+  }
+
+  function sendMessage() {
+    const inp = document.getElementById('userInput');
+    const text = inp.value.trim();
+    if (!text || isLoading) return;
+    inp.value = ''; inp.style.height = 'auto';
+    document.getElementById('charCount').textContent = '0 / 2000';
+    appendUser(text);
+    showTyping();
+    isLoading = true;
+    document.getElementById('sendBtn').disabled = true;
+    setTimeout(() => {
+      removeTyping();
+      respond(text);
+      isLoading = false;
+      document.getElementById('sendBtn').disabled = false;
+    }, 1200 + Math.random() * 800);
+  }
+
+  function sendChip(btn) {
+    document.getElementById('userInput').value = btn.textContent;
+    sendMessage();
+  }
+
+  function appendUser(text) {
+    const div = document.createElement('div');
+    div.className = 'msg-enter flex justify-end';
+    div.innerHTML = `
+      <div class="flex flex-col items-end gap-1 max-w-lg">
+        <div class="bubble-user px-4 py-3 text-sm leading-relaxed">${escHtml(text)}</div>
+        <span class="text-xs msg-time transition-colors duration-300">방금 전</span>
+      </div>`;
+    document.getElementById('chatMessages').appendChild(div);
+    scrollBottom();
+  }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.id = 'typing';
+    div.className = 'msg-enter flex gap-3';
+    div.innerHTML = `${botAvatar()}
+      <div class="bubble-bot px-4 py-3 flex gap-2 items-center transition-colors duration-300">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>`;
+    document.getElementById('chatMessages').appendChild(div);
+    scrollBottom();
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typing');
+    if (t) t.remove();
+  }
+
+  function respond(q) {
+    const answer = findAnswer(q) || `**질문을 이해했습니다.** 현재 해당 내용에 대한 상세 안내를 준비 중입니다.\n\n아래 주요 주제 중 하나를 선택하시거나, 더 구체적인 질문을 입력해 주세요:\n\n- 중대재해처벌법 개요\n- 적용 대상 기업 범위\n- 경영책임자 의무사항\n- 처벌 규정 상세\n\n⚠️ 법적 효력을 갖는 전문 상담은 노무사 또는 변호사에게 문의하시기 바랍니다.`;
+    const html = typeof marked !== 'undefined' ? marked.parse(answer) : answer.replace(/\n/g,'<br>');
+    const div = document.createElement('div');
+    div.className = 'msg-enter flex gap-3';
+    div.innerHTML = `
+      ${botAvatar()}
+      <div class="flex flex-col gap-1 max-w-2xl w-full">
+        <span class="text-xs font-bold text-primary">중대재해 AI 어시스턴트</span>
+        <div class="bubble-bot px-4 py-3 text-sm leading-relaxed transition-colors duration-300">${html}</div>
+        <div class="flex items-center gap-3 mt-1">
+          <button onclick="copyMsg(this)" class="msg-action-btn text-xs flex items-center gap-1 transition-colors duration-300">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>복사
+          </button>
+          <button onclick="likeMsg(this)" class="msg-action-btn text-xs flex items-center gap-1 transition-colors duration-300">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>도움됨
+          </button>
+          <button onclick="regenMsg()" class="msg-action-btn text-xs flex items-center gap-1 transition-colors duration-300">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>재생성
+          </button>
+          <span class="text-xs msg-time ml-auto transition-colors duration-300">방금 전</span>
+        </div>
+      </div>`;
+    document.getElementById('chatMessages').appendChild(div);
+    scrollBottom();
+  }
+
+  // ════════════════════════════════════════════
+  //  ACTIONS
+  // ════════════════════════════════════════════
+  function copyMsg(btn) {
+    const text = btn.closest('.flex.flex-col').querySelector('.bubble-bot').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      Swal.fire({ icon:'success', title:'복사 완료!', text:'클립보드에 복사되었습니다.', timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+    });
+  }
+
+  function likeMsg(btn) {
+    btn.classList.add('text-green-500');
+    btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>도움됨`;
+  }
+
+  function regenMsg() {
+    Swal.fire({ icon:'info', title:'재생성 중...', timer:900, showConfirmButton:false, toast:true, position:'top-end' });
+  }
+
+  function newChat() {
+    Swal.fire({
+      title:'새 대화 시작', text:'현재 대화가 초기화됩니다. 계속하시겠습니까?',
+      icon:'question', showCancelButton:true,
+      confirmButtonColor:'#6C63FF', cancelButtonColor:'#9CA3AF',
+      confirmButtonText:'네, 시작합니다', cancelButtonText:'취소'
+    }).then(r => {
+      if (r.isConfirmed) {
+        document.getElementById('chatMessages').innerHTML = '';
+        respond("새 대화를 시작합니다. 중대재해처벌법에 대해 무엇이든 질문해 주세요 😊");
+      }
+    });
+  }
+
+  function exportChat() {
+    const msgs = [...document.querySelectorAll('#chatMessages .bubble-user, #chatMessages .bubble-bot')]
+      .map(el => el.innerText).join('\n---\n');
+    const blob = new Blob([msgs], { type:'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '중대재해_챗봇_대화.txt'; a.click();
+    Swal.fire({ icon:'success', title:'내보내기 완료!', timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+  }
+
+  function openSettings() {
+    const darkSel = isDark ? 'dark' : 'light';
+    Swal.fire({
+      title:'설정',
+      html:`<div style="text-align:left;font-family:'Nanum Gothic',sans-serif">
+        <label style="font-size:14px;font-weight:700;display:block;margin-bottom:6px">🎨 테마</label>
+        <select id="swalTheme" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;margin-bottom:12px;font-family:'Nanum Gothic',sans-serif">
+          <option value="light" ${darkSel==='light'?'selected':''}>☀️ 라이트 모드</option>
+          <option value="dark" ${darkSel==='dark'?'selected':''}>🌙 다크 모드</option>
+        </select>
+        <label style="font-size:14px;font-weight:700;display:block;margin-bottom:6px">응답 언어</label>
+        <select style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;margin-bottom:12px;font-family:'Nanum Gothic',sans-serif">
+          <option>한국어</option><option>English</option>
+        </select>
+        <label style="font-size:14px;font-weight:700;display:block;margin-bottom:6px">응답 상세도</label>
+        <select style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;font-family:'Nanum Gothic',sans-serif">
+          <option>상세 (전문가용)</option><option>보통</option><option>간략</option>
+        </select>
+      </div>`,
+      confirmButtonColor:'#6C63FF', confirmButtonText:'저장',
+      showCancelButton:true, cancelButtonText:'취소',
+    }).then(r => {
+      if (r.isConfirmed) {
+        const sel = document.getElementById('swalTheme');
+        if (sel) {
+          const chosen = sel.value;
+          if ((chosen === 'dark') !== isDark) toggleTheme();
+        }
+      }
+    });
+  }
+
+  function attachFile() {
+    Swal.fire({ icon:'info', title:'파일 첨부', text:'PDF, 이미지 등 관련 서류를 첨부하면 AI가 분석해 드립니다. (프리미엄 기능)', confirmButtonColor:'#6C63FF' });
+  }
+
+  function copyPrompt() {
+    const inp = document.getElementById('userInput').value;
+    if (!inp) { Swal.fire({ icon:'warning', title:'내용 없음', text:'복사할 텍스트를 입력해 주세요.', confirmButtonColor:'#6C63FF' }); return; }
+    navigator.clipboard.writeText(inp);
+    Swal.fire({ icon:'success', title:'복사 완료', timer:1200, showConfirmButton:false, toast:true, position:'top-end' });
+  }
+
+  function toggleTools() {
+    Swal.fire({
+      title:'사용 가능한 도구',
+      html:`<div style="text-align:left;font-size:14px;font-family:'Nanum Gothic',sans-serif">
+        <p>🔍 <strong>법령 검색</strong> — 관련 법조문 자동 검색</p><hr style="margin:8px 0">
+        <p>📄 <strong>문서 분석</strong> — PDF 업로드 후 분석 (프리미엄)</p><hr style="margin:8px 0">
+        <p>📊 <strong>통계 차트</strong> — 산업재해 통계 시각화</p>
+      </div>`,
+      confirmButtonColor:'#6C63FF', confirmButtonText:'닫기'
+    });
+  }
+
+  function goPremium() {
+    Swal.fire({
+      title:'🌟 프리미엄 업그레이드',
+      html:`<div style="text-align:left;font-size:14px;font-family:'Nanum Gothic',sans-serif">
+        <p>✅ 무제한 AI 법령 상담</p>
+        <p>✅ PDF 문서 분석 기능</p>
+        <p>✅ 전문가 수준 보고서 생성</p>
+        <p>✅ 다크 모드 및 고급 설정</p>
+        <br><p style="color:#6C63FF;font-weight:700">월 29,900원 / 첫 달 무료</p>
+      </div>`,
+      confirmButtonColor:'#6C63FF', confirmButtonText:'지금 시작하기',
+      showCancelButton:true, cancelButtonText:'나중에',
+    }).then(r => {
+      if (r.isConfirmed) Swal.fire({ icon:'success', title:'프리미엄 시작!', text:'곧 결제 페이지로 이동합니다.', timer:2000, showConfirmButton:false });
+    });
+  }
+
+  function setNav(el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    if (window.innerWidth < 768) closeSidebar();
+  }
+
+  // ════════════════════════════════════════════
+  //  CHART MODAL
+  // ════════════════════════════════════════════
+  let chartsInit = false;
+  function openSafety() {
+    document.getElementById('chartModal').classList.remove('hidden');
+    if (!chartsInit) {
+      chartsInit = true;
+      new Chart(document.getElementById('deathChart'), {
+        type:'line',
+        data:{
+          labels:['2018','2019','2020','2021','2022','2023'],
+          datasets:[{ label:'사망자(명)', data:[971,855,882,828,874,812],
+            borderColor:'#6C63FF', backgroundColor:'rgba(108,99,255,.12)',
+            tension:.4, fill:true, pointBackgroundColor:'#6C63FF' }]
+        },
+        options:{ responsive:true, plugins:{ legend:{ labels:{ font:{ family:'Nanum Gothic' } } } }, scales:{ y:{ beginAtZero:false } } }
+      });
+      new Chart(document.getElementById('sectorChart'), {
+        type:'doughnut',
+        data:{
+          labels:['건설업','제조업','운수업','서비스업','기타'],
+          datasets:[{ data:[38,27,12,14,9], backgroundColor:['#6C63FF','#4F46E5','#7C3AED','#A78BFA','#DDD6FE'] }]
+        },
+        options:{ responsive:true, plugins:{ legend:{ position:'right', labels:{ font:{ family:'Nanum Gothic' } } } } }
+      });
+    }
+  }
+  function closeChart()     { document.getElementById('chartModal').classList.add('hidden'); }
+
+  // ════════════════════════════════════════════
+  //  CHECKLIST MODAL
+  // ════════════════════════════════════════════
+  const checkItems = [
+    { label:'안전·보건 목표 및 경영방침 수립', checked:false },
+    { label:'안전·보건 전담 조직 설치 (500인 이상)', checked:false },
+    { label:'유해·위험 요인 확인·개선 절차 구축', checked:false },
+    { label:'안전·보건 예산 편성 및 집행', checked:false },
+    { label:'안전관리자·보건관리자 배치', checked:false },
+    { label:'중대산업재해 발생 시 재발방지 대책 수립', checked:false },
+    { label:'수급인 안전·보건 조치 의무 이행 확인', checked:false },
+    { label:'안전보건 교육 실시 및 기록 보관', checked:false },
+  ];
+
+  function showChecklist() {
+    const body = document.getElementById('checklistBody');
+    body.innerHTML = '';
+    checkItems.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'chk-item flex items-center gap-3 p-3 rounded-xl transition-colors duration-300';
+      div.innerHTML = `
+        <input type="checkbox" id="chk${i}" ${item.checked?'checked':''} onchange="toggleChk(${i},this)"
+          class="w-5 h-5 accent-violet-600 cursor-pointer flex-shrink-0">
+        <label for="chk${i}" class="text-sm cursor-pointer flex-1 chk-label transition-colors duration-300 ${item.checked?'line-through opacity-50':''}">${item.label}</label>`;
+      body.appendChild(div);
+    });
+    document.getElementById('checklistModal').classList.remove('hidden');
+  }
+
+  function toggleChk(i, el) {
+    checkItems[i].checked = el.checked;
+    const label = el.nextElementSibling;
+    if (el.checked) { label.classList.add('line-through','opacity-50'); }
+    else { label.classList.remove('line-through','opacity-50'); }
+    if (checkItems.filter(c=>c.checked).length === checkItems.length) {
+      Swal.fire({ icon:'success', title:'🎉 모든 의무사항 완료!', text:'중대재해처벌법 의무사항을 모두 이행했습니다.', confirmButtonColor:'#6C63FF' });
+    }
+  }
+
+  function closeChecklist() { document.getElementById('checklistModal').classList.add('hidden'); }
+
+  // ════════════════════════════════════════════
+  //  MOBILE SIDEBAR
+  // ════════════════════════════════════════════
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.add('show');
+  });
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  }
+
+  // Modal backdrop close
+  document.getElementById('chartModal').addEventListener('click', function(e){ if(e.target===this) closeChart(); });
+  document.getElementById('checklistModal').addEventListener('click', function(e){ if(e.target===this) closeChecklist(); });
+  </script>
+</body>
+</html>
